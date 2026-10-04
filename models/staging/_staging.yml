@@ -1,0 +1,174 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: One row per order, with status and typed timestamps.
+    columns:
+      - name: order_id
+        description: Primary key.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [created, approved, invoiced, processing, shipped, delivered, unavailable, canceled]
+      - name: purchased_at
+        data_tests:
+          - not_null
+
+  - name: stg_customers
+    description: One row per order-level customer id. customer_unique_id identifies the person across orders.
+    columns:
+      - name: customer_id
+        description: Primary key. Olist issues a new one for every order.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: Stable id for the person. Use this for retention analysis.
+        data_tests:
+          - not_null
+
+  - name: stg_order_items
+    description: One row per item within an order.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_id, order_item_number]
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+      - name: seller_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_sellers')
+                field: seller_id
+      - name: item_price
+        data_tests:
+          - not_null
+
+  - name: stg_order_payments
+    description: One row per payment against an order. An order can be paid in several parts.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_id, payment_sequence]
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: payment_value
+        data_tests:
+          - not_null
+
+  - name: stg_order_reviews
+    description: Customer reviews. A review id can be attached to more than one order, so the key is review_id plus order_id.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [review_id, order_id]
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: review_score
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+
+  - name: stg_products
+    description: Product catalogue. Category names are in Portuguese; join to stg_product_categories for English.
+    columns:
+      - name: product_id
+        description: Primary key.
+        data_tests:
+          - unique
+          - not_null
+      - name: category_name_pt
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_product_categories')
+                field: category_name_pt
+              config:
+                severity: warn
+
+  - name: stg_product_categories
+    description: Portuguese to English product category names.
+    columns:
+      - name: category_name_pt
+        description: Primary key.
+        data_tests:
+          - unique
+          - not_null
+
+  - name: stg_sellers
+    description: One row per seller.
+    columns:
+      - name: seller_id
+        description: Primary key.
+        data_tests:
+          - unique
+          - not_null
+
+  - name: stg_leads
+    description: Marketing qualified leads, the top of the seller acquisition funnel.
+    columns:
+      - name: lead_id
+        description: Primary key.
+        data_tests:
+          - unique
+          - not_null
+      - name: first_contact_date
+        data_tests:
+          - not_null
+
+  - name: stg_closed_deals
+    description: Leads that signed a deal and became sellers.
+    columns:
+      - name: lead_id
+        description: Primary key, and foreign key to stg_leads.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_leads')
+                field: lead_id
+      - name: won_at
+        data_tests:
+          - not_null
