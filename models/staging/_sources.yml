@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Olist CSV files downloaded from Kaggle, read directly from data/raw.
+    config:
+      external_location: "read_csv_auto('data/raw/{name}.csv')"
+    tables:
+      - name: olist_orders_dataset
+        description: One row per order, with its status and timestamps.
+      - name: olist_customers_dataset
+        description: One row per order-level customer id. A person is identified by customer_unique_id.
+      - name: olist_order_items_dataset
+        description: One row per item within an order.
+      - name: olist_order_payments_dataset
+        description: One row per payment made against an order. An order can have several.
+      - name: olist_order_reviews_dataset
+        description: Customer reviews of orders, scored 1 to 5.
+      - name: olist_products_dataset
+        description: Product catalogue with category and dimensions.
+      - name: olist_sellers_dataset
+        description: Sellers on the marketplace and their location.
+      - name: product_category_name_translation
+        description: Portuguese to English product category names.
+      - name: olist_marketing_qualified_leads_dataset
+        description: Seller leads captured by marketing (the top of the sales funnel).
+      - name: olist_closed_deals_dataset
+        description: Leads that signed up as sellers, with details collected by sales.
