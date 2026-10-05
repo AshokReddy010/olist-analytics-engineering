@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: int_order_items_summed
+    description: Order items rolled up to one row per order.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+
+  - name: int_order_payments_summed
+    description: Payments rolled up to one row per order.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+
+  - name: int_order_reviews_latest
+    description: The most recent review for each order.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+
+  - name: int_products_translated
+    description: Products with an English category name, falling back to Portuguese when no translation exists.
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+      - name: category_name
+        data_tests: [not_null]
+
+  - name: int_orders_enriched
+    description: One row per order with customer, value, payment, review and delivery fields. The base for the order and customer marts.
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('stg_orders')
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_unique_id
+        data_tests: [not_null]
