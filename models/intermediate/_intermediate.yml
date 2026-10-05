@@ -38,3 +38,9 @@ models:
         data_tests: [unique, not_null]
       - name: customer_unique_id
         data_tests: [not_null]
+
+  - name: int_seller_sales
+    description: One row per seller with at least one valid sale. First and last sale dates, order count and revenue.
+    columns:
+      - name: seller_id
+        data_tests: [unique, not_null]

@@ -1,0 +1,105 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: One row per order, with value, payment, review and delivery fields, and the order's position in the customer's history. Incremental.
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('stg_orders')
+    columns:
+      - name: order_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+      - name: customer_unique_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_unique_id
+      - name: order_value
+        description: Items plus freight.
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+
+  - name: fct_order_items
+    description: One row per item sold, with product category.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_id, order_item_number]
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('stg_order_items')
+    columns:
+      - name: category_name
+        data_tests: [not_null]
+
+  - name: dim_customers
+    description: One row per person, with first order, cohort month, order count and lifetime value.
+    columns:
+      - name: customer_unique_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+      - name: lifetime_value
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+
+  - name: dim_products
+    description: One row per product with an English category name.
+    columns:
+      - name: product_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+
+  - name: dim_sellers
+    description: One row per seller, with sales totals and funnel origin.
+    columns:
+      - name: seller_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+
+  - name: fct_lead_funnel
+    description: One row per marketing lead, tracked from first contact to closed deal to first sale.
+    data_tests:
+      - dbt_utils.equal_rowcount:
+          arguments:
+            compare_model: ref('stg_leads')
+    columns:
+      - name: lead_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+      - name: days_to_close
+        description: Days from first contact to signing. Null for leads that did not close.
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+              config:
+                severity: warn
+
+  - name: mart_cohort_retention
+    description: Retention by monthly cohort. One row per cohort month and month offset.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [cohort_month, months_since_first_order]
+    columns:
+      - name: retention_rate
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+
+  - name: mart_funnel_by_origin
+    description: Funnel conversion rates and revenue by lead origin channel.
+    columns:
+      - name: origin
+        description: Primary key.
+        data_tests: [unique, not_null]
