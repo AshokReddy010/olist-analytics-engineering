@@ -6,3 +6,4 @@ dbt_packages/
 *.duckdb.wal
 data/raw/olist_geolocation_dataset.csv
 .user.yml
+exports/
