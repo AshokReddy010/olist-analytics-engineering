@@ -29,8 +29,9 @@ jobs:
 
       - name: The web dashboard data matches the models
         run: |
+          set -o pipefail
           cp site/data/olist.json /tmp/committed.json
-          python scripts/export_web.py
+          python scripts/export_web.py 2>&1 | tee export.log || { echo "::error title=export failed::$(tail -c 2500 export.log | sed ':a;N;$!ba;s/\n/%0A/g')"; exit 1; }
           python scripts/check_web_data.py /tmp/committed.json site/data/olist.json
 
       - name: The dbt docs build
