@@ -9,9 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -26,4 +26,11 @@ jobs:
 
       - name: Run again to exercise the incremental model
         run: dbt build --select fct_orders
-        
+
+      - name: The web dashboard data matches the models
+        run: |
+          python scripts/export_web.py
+          git diff --exit-code -- site/data || (echo "::error::site/data is stale: run python scripts/export_web.py and commit" && exit 1)
+
+      - name: The dbt docs build
+        run: dbt docs generate --static

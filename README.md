@@ -6,6 +6,10 @@ An end-to-end analytics engineering project on the public Olist e-commerce and m
 
 Everything runs on a laptop with no cloud account: clone, install, `dbt build`.
 
+**▶ [Interactive dashboard](https://ashokreddy010.github.io/olist-analytics-engineering/)** (a web version of the findings, built from the marts by `scripts/export_web.py`) · [dbt docs and lineage](https://ashokreddy010.github.io/olist-analytics-engineering/dbt-docs.html)
+
+One more finding the web dashboard adds: delivery against the promised date drives reviews. Orders that arrive early average about 4.3 stars with 7% one-star reviews; orders four or more days late average 1.9 stars, and 65% of their reviews are one star.
+
 ## What it answers
 
 1. **Seller acquisition:** which marketing channels bring leads that actually sign as sellers, and how many of those go on to make a sale?
