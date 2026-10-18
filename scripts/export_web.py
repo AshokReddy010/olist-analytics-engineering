@@ -18,7 +18,9 @@ def rows(con, sql):
     rel = con.execute(sql)
     cols = [d[0] for d in rel.description]
     def clean(v):
-        return float(v) if v is not None and type(v).__name__ == "Decimal" else v
+        if v is not None and type(v).__name__ == "Decimal":
+            v = float(v)
+        return round(v, 6) if isinstance(v, float) else v  # rounded so parallel sums export identically
 
     return [dict(zip(cols, (clean(v) for v in r), strict=True)) for r in rel.fetchall()]
 
@@ -86,7 +88,7 @@ def main():
     scores = pd.read_csv(ROOT / "analysis" / "lead_scores_test_period.csv")
     scores["decile"] = pd.qcut(scores["score"].rank(method="first", ascending=False), 10, labels=range(1, 11)).astype(int)
     deciles = scores.groupby("decile").agg(leads=("target", "size"), closed=("target", "sum")).reset_index()
-    deciles["close_rate"] = deciles["closed"] / deciles["leads"]
+    deciles["close_rate"] = (deciles["closed"] / deciles["leads"]).round(6)
     lead = {"base_rate": float(scores["target"].mean()), "deciles": deciles.to_dict("records")}
 
     doc = {"kpi": kpi, "monthly": monthly, "lateness": lateness, "states": states, "categories": categories,
